@@ -15,10 +15,20 @@ export default function EditWorkflowPage() {
   const { id } = useParams<{ id: string }>();
   const [workflow, setWorkflow] = useState<WorkflowSchemaClient | null>(null);
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetch(`/api/workflows/${id}`).then((r) => r.json()).then((d) => setWorkflow(d.workflow));
   }, [id]);
+
+  const copyEmbedSnippet = async () => {
+    await navigator.clipboard.writeText(embedSnippet);
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  };
 
   async function handleSave() {
     if (!workflow) return;
@@ -96,7 +106,22 @@ export default function EditWorkflowPage() {
           <summary className="cursor-pointer select-none list-none flex items-center gap-2 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
             <Code2 className="w-4 h-4 text-gray-400" />
             Embed snippet
-            <span className="ml-auto text-gray-300 text-xs group-open:rotate-180 transition-transform">▾</span>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault(); // prevents details from opening/closing
+                e.stopPropagation();
+                copyEmbedSnippet();
+              }}
+              className="ml-2 px-2 py-1 text-xs rounded border border-gray-200 hover:bg-gray-100"
+            >
+              {copied ? "Copied!" : "Copy"}
+            </button>
+
+            <span className="ml-auto text-gray-300 text-xs group-open:rotate-180 transition-transform">
+              ▾
+            </span>
           </summary>
           <pre className="text-xs m-3 mt-0 bg-gray-950 text-gray-100 p-4 rounded-lg overflow-x-auto leading-relaxed">
             {embedSnippet}
