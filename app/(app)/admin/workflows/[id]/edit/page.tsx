@@ -10,6 +10,7 @@ import { ThemeCustomizer } from "@/components/builder/ThemeCustomizer";
 import { WorkflowPreview } from "@/components/builder/WorkflowPreview";
 import type { WorkflowSchemaClient } from "@/types/workflow";
 import { ArrowLeft, Code2, Webhook, Globe, Save, Loader2, Sparkles } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function EditWorkflowPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,9 +18,27 @@ export default function EditWorkflowPage() {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const { token } = useAuth();
+
   useEffect(() => {
-    fetch(`/api/workflows/${id}`).then((r) => r.json()).then((d) => setWorkflow(d.workflow));
-  }, [id]);
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    fetch(`/api/workflows/${id}`, { headers })
+      .then((r) => {
+        if (r.status === 401) {
+          // unauthorized — clear workflow and bail
+          setWorkflow(null);
+          return { workflow: null };
+        }
+        return r.json();
+      })
+      .then((d) => setWorkflow(d.workflow))
+      .catch((e) => {
+        console.error("Failed to load workflow:", e);
+        setWorkflow(null);
+      });
+  }, [id, token]);
 
   const copyEmbedSnippet = async () => {
     await navigator.clipboard.writeText(embedSnippet);
@@ -34,11 +53,19 @@ export default function EditWorkflowPage() {
     if (!workflow) return;
     setSaving(true);
     try {
-      await fetch(`/api/workflows/${id}`, {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch(`/api/workflows/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(workflow),
       });
+
+      if (res.status === 401) {
+        // optional: show message or force logout elsewhere; for now log
+        console.warn("Unauthorized when saving workflow");
+      }
     } finally {
       setSaving(false);
     }

@@ -5,17 +5,23 @@ import Link from "next/link";
 import { Button } from "@/shcn_components/ui/button";
 import type { WorkflowSchemaClient } from "@/types/workflow";
 import { Plus, ArrowRight, Workflow as WorkflowIcon, Layers } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function AdminDashboard() {
   const [workflows, setWorkflows] = useState<WorkflowSchemaClient[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { token } = useAuth();
+
   useEffect(() => {
-    fetch("/api/workflows")
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    fetch("/api/workflows", { headers })
       .then((r) => r.json())
-      .then((data) => setWorkflows(data.workflows))
+      .then((data) => setWorkflows(Array.isArray(data?.workflows) ? data.workflows : []))
       .finally(() => setLoading(false));
-  }, []);
+  }, [token]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -33,7 +39,7 @@ export default function AdminDashboard() {
               <p className="text-sm text-gray-500">
                 {loading
                   ? "Fetching your workflows…"
-                  : `${workflows.length} workflow${workflows.length === 1 ? "" : "s"} configured`}
+                  : `${(workflows?.length ?? 0)} workflow${(workflows?.length ?? 0) === 1 ? "" : "s"} configured`}
               </p>
             </div>
           </div>

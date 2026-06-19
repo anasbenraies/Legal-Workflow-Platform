@@ -45,7 +45,36 @@ export async function createWorkflow(
   };
 
   await adminDb.collection(WORKFLOWS).doc(id).set(doc);
+  // optional owner mapping: if input includes an ownerId (not part of WorkflowSchemaClient), map it
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const maybe = input as any;
+  if (maybe.ownerId) {
+    await adminDb.collection("user_workflows").doc(id).set({ workflowId: id, ownerId: maybe.ownerId });
+  }
   return stripSecret(doc);
+}
+
+export async function listWorkflowsByOwner(ownerId: string): Promise<WorkflowSchemaClient[]> {
+  const snap = await adminDb.collection("user_workflows").where("ownerId", "==", ownerId).get();
+  if (snap.empty) return [];
+  const ids = snap.docs.map((d) => d.id);
+  if (ids.length === 0) return [];
+  const workflows: WorkflowSchemaClient[] = [];
+  for (const id of ids) {
+    const doc = await adminDb.collection(WORKFLOWS).doc(id).get();
+    if (doc.exists) workflows.push(stripSecret(doc.data() as WorkflowSchema));
+  }
+  return workflows;
+}
+
+export async function getWorkflowIfOwner(id: string, ownerId: string): Promise<WorkflowSchemaClient | null> {
+  const map = await adminDb.collection("user_workflows").doc(id).get();
+  if (!map.exists) return null;
+  const data = map.data() as any;
+  if (data.ownerId !== ownerId) return null;
+  const doc = await adminDb.collection(WORKFLOWS).doc(id).get();
+  if (!doc.exists) return null;
+  return stripSecret(doc.data() as WorkflowSchema);
 }
 
 export async function updateWorkflow(
@@ -63,6 +92,8 @@ export async function updateWorkflow(
 
 export async function deleteWorkflow(id: string): Promise<void> {
   await adminDb.collection(WORKFLOWS).doc(id).delete();
+  // remove owner mapping if exists
+  await adminDb.collection("user_workflows").doc(id).delete();
 }
 
 export async function createSubmission(data: {

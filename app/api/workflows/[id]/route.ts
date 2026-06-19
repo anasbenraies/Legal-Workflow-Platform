@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getWorkflowPublic, updateWorkflow, deleteWorkflow } from "@/lib/firestore";
+import { getWorkflowPublic, updateWorkflow, deleteWorkflow, getWorkflowIfOwner } from "@/lib/firestore";
 import { workflowCreateSchema } from "@/lib/validation";
 import { sanitizeValue } from "@/lib/sanitize";
+import { verifyToken } from "@/lib/jwt";
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+function getBearerToken(req: NextRequest) {
+  const h = req.headers.get("authorization") || req.headers.get("Authorization");
+  if (!h) return null;
+  const m = h.match(/^Bearer (.+)$/i);
+  return m ? m[1] : null;
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const workflow = await getWorkflowPublic(id);
+  const token = getBearerToken(req);
+  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const payload = verifyToken(token);
+  if (!payload || !payload.sub) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const workflow = await getWorkflowIfOwner(id, String(payload.sub));
   if (!workflow) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json({ workflow });
 }
@@ -33,6 +46,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params;
 
+  // Auth: ensure owner
+  const token = getBearerToken(req);
+  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const payload = verifyToken(token);
+  if (!payload || !payload.sub) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const ownerCheck = await getWorkflowIfOwner(id, String(payload.sub));
+  if (!ownerCheck) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   // Validate update payload (accept partial fields)
   let parsed;
   try {
@@ -49,8 +71,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json({ workflow });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
+  const token = getBearerToken(req);
+  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const payload = verifyToken(token);
+  if (!payload || !payload.sub) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const ownerCheck = await getWorkflowIfOwner(id, String(payload.sub));
+  if (!ownerCheck) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   await deleteWorkflow(id);
   return NextResponse.json({ success: true });
 }

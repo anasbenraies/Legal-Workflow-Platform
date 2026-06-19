@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/shcn_components/ui/input";
@@ -16,16 +17,33 @@ export default function NewWorkflowPage() {
   const router = useRouter();
   const [workflow, setWorkflow] = useState<WorkflowSchemaClient>(createEmptyWorkflow());
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
 
   async function handleSave() {
     setSaving(true);
+    setError(null);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
       const res = await fetch("/api/workflows", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(workflow),
       });
+
       const data = await res.json();
+      if (!res.ok) {
+        setError(data?.error || data?.message || "Failed to create workflow");
+        return;
+      }
+
+      if (!data?.workflow?.id) {
+        setError("Unexpected response from server");
+        return;
+      }
+
       router.push(`/admin/workflows/${data.workflow.id}/edit`);
     } finally {
       setSaving(false);
@@ -73,6 +91,7 @@ export default function NewWorkflowPage() {
               </>
             )}
           </Button>
+          {error && <div className="text-sm text-red-600 ml-4">{error}</div>}
         </div>
       </div>
 

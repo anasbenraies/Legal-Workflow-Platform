@@ -124,8 +124,24 @@
     container.appendChild(wrapper);
   }
 
-  fetch(baseUrl + "/api/widget/" + workflowId + "?token=" + token, { cache: "no-store" })
-    .then(function (res) { return res.json(); })
-    .then(renderWidget)
+  var widgetUrl = baseUrl + "/api/widget/" + workflowId + (token ? "?token=" + encodeURIComponent(token) : "");
+
+  fetch(widgetUrl, { cache: "no-store" })
+    .then(function (res) {
+      if (!res.ok) {
+        // log server error body for easier debugging
+        res.text().then(function (txt) { console.error("LegalFlow widget fetch failed:", res.status, txt); });
+        throw new Error("Widget fetch failed: " + res.status);
+      }
+      return res.json();
+    })
+    .then(function (data) {
+      // ensure payload looks like a WidgetConfigResponse
+      if (!data || !data.theme || !Array.isArray(data.fields)) {
+        console.error("LegalFlow widget response missing expected fields:", data);
+        return;
+      }
+      renderWidget(data);
+    })
     .catch(function (err) { console.error("LegalFlow widget failed to load:", err); });
 })();
