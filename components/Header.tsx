@@ -10,7 +10,7 @@ export default function Header() {
         <header className="w-full border-b bg-white/60 backdrop-blur-sm">
             <div className="mx-auto max-w-6xl flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
-                    <div className="text-lg font-semibold">Ketrone</div>
+                    <div className="text-lg font-semibold">LegalFlow</div>
                 </div>
                 <div>
                     {user ? (
