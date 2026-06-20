@@ -82,9 +82,14 @@ export default function EditWorkflowPage() {
     );
   }
 
+  // Normalize NEXT_PUBLIC_APP_URL to avoid duplicate slashes when concatenating
+  const rawBase = process.env.NEXT_PUBLIC_APP_URL || "";
+  const base = rawBase.replace(/\/+$/g, "");
+  const embedUrl = base ? `${base}/embed.js` : "/embed.js";
+
   const embedSnippet = `<div id="legalflow-widget"></div>
 <script
-  src="${process.env.NEXT_PUBLIC_APP_URL}/embed.js"
+  src="${embedUrl}"
   data-workflow-id="${workflow.id}"
 ></script>`;
 
