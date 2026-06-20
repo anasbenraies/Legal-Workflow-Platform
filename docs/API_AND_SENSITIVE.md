@@ -99,7 +99,7 @@ This document describes the server API endpoints, their expected inputs, behavio
   Headers: `Authorization: Bearer <token>`, `Content-Type: application/json`
   Body (JSON): { name: "Intake form", fields: [...], theme: {...}, webhookUrl: "https://example.com/webhook", allowedDomains: ["https://client.example"] }
 
-- Embed snippet (host page): ( for development )
+- Embed snippet (host page):
 
   <script src="https://localhost:3000/embed.js" data-workflow-id="wf_xxx" data-token=""></script>
 
