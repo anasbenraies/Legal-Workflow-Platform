@@ -46,6 +46,27 @@ This document describes the server API endpoints, their expected inputs, behavio
   - Output (JSON): { workflow } (201) — returned workflow omits `hmacSecret`.
   - Files: [app/api/workflows/route.ts](app/api/workflows/route.ts#L1-L200) and [lib/validation.ts](lib/validation.ts#L1-L200)
 
+- **POST /api/workflows/generate**
+  - Purpose: Generate a small intake workflow (three fields + theme) from a
+    natural-language prompt using an AI provider (configured to use Google).
+  - Auth: required — `Authorization: Bearer <token>` (JWT). Only authenticated users may call this endpoint.
+  - Input (JSON): { prompt: string }
+    - `prompt` is a plain-language description of the desired form (e.g. "Give me a friendly, light-themed slip-and-fall intake flow").
+  - Behavior:
+    - Validates the caller's JWT using `verifyToken`.
+    - Calls Google Generative Language API (when `GOOGLE_API_KEY` is configured) and instructs the model to return machine-readable JSON only.
+    - Attempts to parse the returned JSON. If parsing fails it will try to extract a JSON substring.
+    - Normalizes and validates the returned theme so it matches allowed app values (fontFamily ∈ {inter, roboto, georgia}; borderRadius ∈ {none, sm, md, lg, full}).
+    - Ensures exactly three fields are returned: a `text` input, an `email` input, and a `select` with two options. If the AI response cannot be parsed, sensible defaults are returned.
+  - Output (JSON): { fields: FormField[], theme: ThemeConfig } where `fields` has exactly three items (text, email, select).
+  - Errors:
+    - 401 Unauthorized — missing or invalid JWT.
+    - 400 Bad Request — missing `prompt`.
+    - 501 Not Implemented — `GOOGLE_API_KEY` not configured.
+    - 502 Bad Gateway — AI provider returned an error.
+    - 500 Internal Server Error — unexpected server error.
+  - Files: [app/api/workflows/generate/route.ts](app/api/workflows/generate/route.ts#L1-L200)
+
 - **GET|PUT|DELETE /api/workflows/[id]**
   - Purpose: read / update / delete a single workflow (owner-only).
   - Auth: required — `Authorization: Bearer <token>` (JWT). Server enforces ownership via `getWorkflowIfOwner`.

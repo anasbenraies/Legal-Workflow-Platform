@@ -19,6 +19,36 @@ export default function EditWorkflowPage() {
   const [copied, setCopied] = useState(false);
 
   const { token } = useAuth();
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  async function handleGenerate() {
+    setAiError(null);
+    setAiLoading(true);
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch("/api/workflows/generate", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setAiError(data?.error || data?.message || "AI generation failed");
+        return;
+      }
+
+      setWorkflow((prev) => ({ ...prev, ...(data?.fields ? { fields: data.fields } : {}), ...(data?.theme ? { theme: data.theme } : {}) } as any));
+    } catch (e: any) {
+      setAiError(e?.message || "AI request failed");
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   useEffect(() => {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -198,6 +228,27 @@ export default function EditWorkflowPage() {
 
             <div className="border border-gray-200 rounded-xl bg-white shadow-sm p-5">
               <ThemeCustomizer theme={workflow.theme} onChange={(theme) => setWorkflow({ ...workflow, theme })} />
+            </div>
+            {/* AI generator */}
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm p-5">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">AI generator</div>
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder='E.g. "Give me a friendly, light-themed slip-and-fall intake flow"'
+                className="w-full min-h-[72px] p-2 border rounded-md"
+              />
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  disabled={!token || aiLoading || aiPrompt.trim() === ""}
+                  onClick={handleGenerate}
+                  className="px-3 py-1 bg-black text-white rounded"
+                >
+                  {aiLoading ? "Generating…" : "Generate with  AI"}
+                </button>
+                <div className="text-sm text-red-600">{aiError}</div>
+                {!token && <div className="text-sm text-gray-500">Sign in to use AI generator</div>}
+              </div>
             </div>
 
             <div className="border border-gray-200 rounded-xl bg-white shadow-sm p-5">

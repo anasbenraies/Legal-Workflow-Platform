@@ -20,6 +20,7 @@ Updates made in the admin dashboard propagate to embedded forms so client sites 
 - HMAC Signature Verification
 - Multi-User Architecture
 - Domain Validation
+- AI-Powered workflow Generation (Google AI)
 
 Screenshots :
 - Workflow Builder :
@@ -46,6 +47,7 @@ This application uses a Next.js App Router front-end and server functions to exp
 - Zod for runtime validation
 - jsonwebtoken for JWTs
 - HMAC signing utilities for webhook verification
+- Google AI models
 - Vercel 
 
 ## Installation
@@ -76,6 +78,7 @@ Required environment variables:
 - `FIREBASE_ADMIN_SDK_KEY ` = example {"type":"service_account","project_id": "abc..",...}
 - `JWT_SECRET`
 - `NEXT_PUBLIC_APP_URL` for example `http://localhost:3000` for local development
+- `GOOGLE_API_KEY` (for AI generation feature)
 
 
 ## Running Locally
