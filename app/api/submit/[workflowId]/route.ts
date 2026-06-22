@@ -30,9 +30,10 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 
-// --------------------
-// YOUR ORIGINAL LOGIC (UNCHANGED)
-// --------------------
+/*
+ submit workflow data, trigger webhook if configured
+ documentaion can be found in docs\API_AND_SENSITIVE.md
+*/
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ workflowId: string }> }

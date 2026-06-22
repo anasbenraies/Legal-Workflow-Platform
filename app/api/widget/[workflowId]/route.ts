@@ -19,6 +19,11 @@ export async function OPTIONS(req: NextRequest) {
   });
 }
 
+
+/*
+ get widget config (public info only, no secret fields)
+ documentaion can be found in docs\API_AND_SENSITIVE.md
+*/
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ workflowId: string }> }

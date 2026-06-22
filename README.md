@@ -50,6 +50,40 @@ This application uses a Next.js App Router front-end and server functions to exp
 - Google AI models
 - Vercel 
 
+### HMAC signing flow
+
+- **Where the secret is created:** When a workflow is created on the server a per-workflow HMAC secret is generated (see `lib/hmac.ts`). The secret is created server-side to sign webhook payloads.
+- **Where it is stored:** The secret is stored in Firestore on the workflow document (field `hmacSecret`). Server helpers in `lib/firestore.ts` store the secret at creation time and include logic to _never_ serialize the secret back to browser clients (see `stripSecret` behavior).
+- **When/how it's used:** When a submission is received (`POST /api/submit/[workflowId]`) the server sanitizes the submission and, if the workflow has a `webhookUrl`, the server computes an HMAC signature over the sanitized payload and sends it in request headers to the webhook endpoint. The header names and signing format are implemented in `lib/hmac.ts` (e.g. `X-LegalFlow-Signature`, `X-LegalFlow-Timestamp`).
+
+### Origin validation (render + submit)
+
+- **Why double-check:** The platform defends both the widget configuration fetch (render) and the submission ingestion (submit) to prevent unauthorized sites from embedding or submitting to workflows.
+- **Render-time check:** The widget endpoint (`GET /api/widget/[workflowId]`) inspects the incoming `Origin` header and compares it against the workflow's `allowedDomains`. If the origin is not allowed, the endpoint returns `403 Forbidden` and the embeddable script will not render the form on that site.
+- **Submit-time check:** The public submit endpoint (`POST /api/submit/[workflowId]`) performs a similar `Origin` check and will reject submissions that originate from disallowed domains. This prevents client-side bypass where an attacker might attempt to post directly to the submit endpoint from an unauthorized origin.
+- **Implementation files:** See `app/api/widget/[workflowId]/route.ts` and `app/api/submit/[workflowId]/route.ts` for the precise checks and error handling.
+- **Client behavior:** The embeddable `public/embed.js` script also handles `403` responses gracefully; the client should not assume the widget will always render and must handle blocked or missing theme/config responses.
+
+### Dynamic rendering
+
+- **How the embed script is loaded:** Host pages include a small script tag provided by the admin UI, for example:
+
+  <script src="https://your-site.com/embed.js" data-workflow-id="wf_xxx" data-token=""></script>
+
+  The script reads `data-workflow-id` from the script tag and initializes the widget container (`#legalflow-widget`) on the host page.
+
+- **Config fetch on client load:** On initialization the script builds the widget URL and fetches the workflow configuration from the server (`GET /api/widget/[workflowId]`). The browser automatically includes the `Origin` header for the host page; the server validates it against the workflow's `allowedDomains` and returns `403` if disallowed.
+
+- **What the script receives:** The widget endpoint returns a JSON `WidgetConfigResponse` with `id`, `name`, `fields`, and `theme`. The script uses this config to:
+  - Generate and inject CSS rules that reflect the workflow `theme` (colors, font family, border radius, input style).
+  - Render DOM form controls for each `field` (text, email, select, etc.) into the host page's widget container.
+
+- **Submit flow from the host page:** When an end-user submits the form, the embed script posts the submission to `POST /api/submit/[workflowId]` from the host origin. The server again validates the `Origin` header and rejects disallowed origins. Submissions are sanitized server-side and, if configured, forwarded to the workflow's `webhookUrl` with HMAC headers.
+
+- **Error handling:** The embed script gracefully handles non-OK responses (403, 404, 5xx) and missing fields/theme. It never exposes secrets (e.g., `hmacSecret`) and treats server-provided theme values as untrusted input that drives presentation only (not sensitive logic).
+
+
+
 ## Installation
 
 1. Clone the repository

@@ -12,6 +12,8 @@ function getBearerToken(req: NextRequest) {
   return m ? m[1] : null;
 }
 
+// List all workflows
+// documentaion can be found in docs\API_AND_SENSITIVE.md
 export async function GET(req: NextRequest) {
   // return workflows for authenticated user only
   const token = getBearerToken(req);
@@ -23,6 +25,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ workflows });
 }
 
+// Create a new workflow
+// documentaion can be found in docs\API_AND_SENSITIVE.md
 export async function POST(req: NextRequest) {
   const body = await req.json();
   console.log(JSON.stringify(body, null, 2));

@@ -11,6 +11,8 @@ function getBearerToken(req: NextRequest) {
   return m ? m[1] : null;
 }
 
+// Get workflow details (public info only, no secret fields)
+// documentaion can be found in docs\API_AND_SENSITIVE.md
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const token = getBearerToken(req);
@@ -23,6 +25,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json({ workflow });
 }
 
+// Update workflow (owner only, partial updates allowed)
+// documentaion can be found in docs\API_AND_SENSITIVE.md
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const body = await req.json();
 
@@ -71,6 +75,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json({ workflow });
 }
 
+// delete workflow
+// documentaion can be found in docs\API_AND_SENSITIVE.md
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 

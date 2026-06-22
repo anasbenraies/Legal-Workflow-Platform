@@ -65,7 +65,13 @@ function ensureThreeFields(raw: any): FormField[] {
   try {
     if (!raw || typeof raw !== "object") return [textField, emailField, selectField];
 
-    const fields = Array.isArray(raw.fields) ? raw.fields : [];
+    // `raw` may be either the parsed object { fields: [...] } or already the
+    // fields array itself. Support both shapes.
+    const fields = Array.isArray(raw)
+      ? raw
+      : Array.isArray(raw?.fields)
+        ? raw.fields
+        : [];
     const mapped: FormField[] = [];
 
     // pick first text-like
@@ -89,6 +95,8 @@ function ensureThreeFields(raw: any): FormField[] {
   }
 }
 
+// generate workflow based on prompt
+// documentaion can be found in docs\API_AND_SENSITIVE.md
 export async function POST(req: NextRequest) {
   try {
     const auth = req.headers.get("authorization") || "";
@@ -103,15 +111,8 @@ export async function POST(req: NextRequest) {
     if (!apiKey) return NextResponse.json({ error: "AI provider not configured" }, { status: 501 });
 
     // Build a clear system prompt asking for strict JSON
-    const system = `You are an assistant that outputs machine-readable JSON only. Given a plain-language request to generate a small intake form, return a JSON object with two keys: \"fields\" (an array of form field objects) and \"theme\" (an object with keys backgroundColor, primaryColor, fontFamily, borderRadius, inputStyle, layout). fontFamily must be one of: inter, roboto, georgia. borderRadius must be one of: none, sm, md, lg, full. Always return exactly three fields in the \"fields\" array: a text input, an email input, and a select with two options. Example: { \"fields\": [{\"type\":\"text\",\"label\":\"Full name\"},...], \"theme\": { ... } }`;
+    const system = `You are an assistant that outputs machine-readable JSON only. Given a plain-language request to generate a small intake form, return a JSON object ,without the ( json ) prefix or suffix,  with two keys: \"fields\" (an array of form field objects) and \"theme\" (an object with keys backgroundColor, primaryColor, fontFamily, borderRadius, inputStyle, layout). fontFamily must be one of: inter, roboto, georgia. borderRadius must be one of: none, sm, md, lg, full. Always return exactly three fields in the \"fields\" array: a text input, an email input, and a select with two options. Example: { \"fields\": [{\"type\":\"text\",\"label\":\"Full name\"},...], \"theme\": { ... } }`;
 
-    const payload = {
-      prompt: `${system}\n\nUser request: ${prompt}`,
-      // model specifics may vary; using Google's text-bison endpoint format
-      model: "text-bison-001",
-      temperature: 0.2,
-      max_output_tokens: 512,
-    };
 
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
       method: "POST",
@@ -147,7 +148,7 @@ export async function POST(req: NextRequest) {
 
     const j = await res.json().catch(() => null);
     // Attempt to extract text from Google's response
-   const content = j?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const content = j?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     // Expect AI to return pure JSON; try parse
     let parsed: any = null;
     try {
@@ -166,7 +167,8 @@ export async function POST(req: NextRequest) {
 
     const fields = ensureThreeFields(parsed?.fields || parsed);
     const theme = normalizeTheme(parsed?.theme || null);
-
+    console.log("AI Generated Fields:", fields);
+    console.log("AI Generated Theme:", theme);
     return NextResponse.json({ fields, theme });
   } catch (err) {
     console.error("Generate workflow error:", err);

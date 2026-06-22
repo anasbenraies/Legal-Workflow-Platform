@@ -22,6 +22,11 @@ export default function EditWorkflowPage() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [allowedDomainsInput, setAllowedDomainsInput] = useState<string>(() => workflow?.allowedDomains?.join(", ") ?? "");
+
+  useEffect(() => {
+    if (workflow) setAllowedDomainsInput(workflow.allowedDomains.join(", "));
+  }, [workflow?.allowedDomains]);
 
   async function handleGenerate() {
     setAiError(null);
@@ -214,11 +219,12 @@ export default function EditWorkflowPage() {
                   </label>
                   <Input
                     placeholder="example.com, app.example.com"
-                    value={workflow.allowedDomains.join(", ")}
-                    onChange={(e) =>
+                    value={allowedDomainsInput}
+                    onChange={(e) => setAllowedDomainsInput(e.target.value)}
+                    onBlur={() =>
                       setWorkflow({
                         ...workflow,
-                        allowedDomains: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                        allowedDomains: allowedDomainsInput.split(",").map((s) => s.trim()).filter(Boolean),
                       })
                     }
                   />

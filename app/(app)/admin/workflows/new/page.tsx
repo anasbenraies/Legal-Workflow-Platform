@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -13,6 +13,7 @@ import { createEmptyWorkflow } from "@/types/workflow";
 import type { WorkflowSchemaClient } from "@/types/workflow";
 import { ArrowLeft, Webhook, Globe, Save, Loader2, Sparkles, PlusCircle } from "lucide-react";
 
+
 export default function NewWorkflowPage() {
   const router = useRouter();
   const [workflow, setWorkflow] = useState<WorkflowSchemaClient>(createEmptyWorkflow());
@@ -22,6 +23,13 @@ export default function NewWorkflowPage() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [allowedDomainsInput, setAllowedDomainsInput] = useState<string>(() => workflow.allowedDomains.join(", "));
+
+  // Keep the input in sync if workflow.allowedDomains changes externally
+  // (e.g., when AI generator updates fields/theme)
+  useEffect(() => {
+    setAllowedDomainsInput(workflow.allowedDomains.join(", "));
+  }, [workflow.allowedDomains]);
 
   async function handleGenerate() {
     setAiError(null);
@@ -150,11 +158,12 @@ export default function NewWorkflowPage() {
                   </label>
                   <Input
                     placeholder="example.com, app.example.com"
-                    value={workflow.allowedDomains.join(", ")}
-                    onChange={(e) =>
+                    value={allowedDomainsInput}
+                    onChange={(e) => setAllowedDomainsInput(e.target.value)}
+                    onBlur={() =>
                       setWorkflow({
                         ...workflow,
-                        allowedDomains: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                        allowedDomains: allowedDomainsInput.split(",").map((s) => s.trim()).filter(Boolean),
                       })
                     }
                   />
