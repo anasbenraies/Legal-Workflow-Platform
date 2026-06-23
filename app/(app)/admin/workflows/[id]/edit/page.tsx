@@ -132,7 +132,7 @@ export default function EditWorkflowPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Top bar */}
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-2 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <Link
               href="/admin/workflows"
