@@ -26,6 +26,7 @@
       "[data-lf-widget] .lf-error { color:#dc2626; font-size:12px; margin-top:4px; }" +
       "[data-lf-widget] .lf-radio-option { display:flex; align-items:center; gap:8px; font-weight:400; margin-bottom: calc(var(--lf-gap) / 4); }" +
       "[data-lf-widget] .lf-radio-option input[type=radio] { width:16px; height:16px; margin:0; }" +
+      "[data-lf-widget] input[type=radio] { width:16px !important; height:16px !important; margin:0 8px 0 0 !important; vertical-align:middle !important; appearance:radio !important; -webkit-appearance:radio !important; accent-color:" + theme.primaryColor + " !important; }" +
       "[data-lf-widget] .lf-dyn-row { margin-bottom: calc(var(--lf-gap) / 4); display:flex; gap: calc(var(--lf-gap) / 2); align-items:flex-end; }";
 
     var styleTag = document.createElement("style");
