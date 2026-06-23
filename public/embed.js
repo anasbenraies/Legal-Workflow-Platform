@@ -16,8 +16,11 @@
       " padding: 24px; border-radius:" + radiusMap[theme.borderRadius] + "; --lf-gap: " + (layoutMap[theme.layout] || "1rem") + "; }" +
       "[data-lf-widget] .lf-field { margin-bottom: var(--lf-gap); }" +
       "[data-lf-widget] label { display:block; font-size: 14px; margin-bottom: calc(var(--lf-gap) / 6); font-weight: 500; }" +
-      "[data-lf-widget] input, [data-lf-widget] select, [data-lf-widget] textarea { width:100%; padding: 8px 12px;" +
-      " border-radius:" + radiusMap[theme.borderRadius] + "; border: 1px solid #d1d5db; box-sizing: border-box; }" +
+        "[data-lf-widget] input.lf-input, [data-lf-widget] input[data-slot=\"input\"], [data-lf-widget] input, [data-lf-widget] select, [data-lf-widget] textarea { width:100% !important; padding: 8px 12px !important;" +
+        " border-radius:" + radiusMap[theme.borderRadius] + " !important; box-sizing: border-box !important; font-family: inherit !important; background: transparent !important; outline: none !important; box-shadow: none !important; -webkit-appearance: none !important; }" +
+        "[data-lf-widget][data-lf-input-style=\"outlined\"] input.lf-input, [data-lf-widget][data-lf-input-style=\"outlined\"] input[data-slot=\"input\"], [data-lf-widget][data-lf-input-style=\"outlined\"] input, [data-lf-widget][data-lf-input-style=\"outlined\"] select, [data-lf-widget][data-lf-input-style=\"outlined\"] textarea { border: 1px solid #d1d5db !important; background: transparent !important; }" +
+        "[data-lf-widget][data-lf-input-style=\"filled\"] input.lf-input, [data-lf-widget][data-lf-input-style=\"filled\"] input[data-slot=\"input\"], [data-lf-widget][data-lf-input-style=\"filled\"] input, [data-lf-widget][data-lf-input-style=\"filled\"] select, [data-lf-widget][data-lf-input-style=\"filled\"] textarea { border: none !important; background: rgba(0,0,0,0.04) !important; }" +
+        "[data-lf-widget][data-lf-input-style=\"underlined\"] input.lf-input, [data-lf-widget][data-lf-input-style=\"underlined\"] input[data-slot=\"input\"], [data-lf-widget][data-lf-input-style=\"underlined\"] input, [data-lf-widget][data-lf-input-style=\"underlined\"] select, [data-lf-widget][data-lf-input-style=\"underlined\"] textarea { border: none !important; border-bottom: 1px solid #d1d5db !important; border-radius: 0 !important; background: transparent !important; padding-left: 0.25rem !important; padding-right: 0.25rem !important; }" +
       "[data-lf-widget] button[type=submit] { background:" + theme.primaryColor + "; color:#fff; border:none;" +
       " padding: 10px 18px; border-radius:" + radiusMap[theme.borderRadius] + "; cursor:pointer; font-weight:600; }" +
       "[data-lf-widget] .lf-error { color:#dc2626; font-size:12px; margin-top:4px; }" +
@@ -138,7 +141,9 @@
     injectStyles(schema.theme);
 
     var wrapper = document.createElement("form");
-    wrapper.setAttribute("data-lf-widget", schema.id);
+      wrapper.setAttribute("data-lf-widget", schema.id);
+      // expose input style on the form so CSS can scope correctly
+      wrapper.setAttribute("data-lf-input-style", schema.theme.inputStyle);
 
     (schema.fields || []).forEach(function (field) {
       wrapper.appendChild(createField(field));
