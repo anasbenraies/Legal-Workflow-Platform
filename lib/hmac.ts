@@ -1,5 +1,12 @@
 import crypto from "crypto";
 
+
+/*
+webhook signing utilities.
+
+Why sensitive: signs payloads with HMAC-SHA256 using hmacSecret stored per-workflow. Recipients rely on header X-LegalFlow-Signature.
+Functions: generateSecret(), generateHmacSignature(payload, secret), buildWebhookHeaders(payload, secret).
+*/
 export function generateSecret(): string {
   return crypto.randomBytes(32).toString("hex");
 }

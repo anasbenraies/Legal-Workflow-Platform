@@ -55,6 +55,8 @@ This application uses a Next.js App Router front-end and server functions to exp
 - **Where the secret is created:** When a workflow is created on the server a per-workflow HMAC secret is generated (see `lib/hmac.ts`). The secret is created server-side to sign webhook payloads.
 - **Where it is stored:** The secret is stored in Firestore on the workflow document (field `hmacSecret`). Server helpers in `lib/firestore.ts` store the secret at creation time and include logic to _never_ serialize the secret back to browser clients (see `stripSecret` behavior).
 - **When/how it's used:** When a submission is received (`POST /api/submit/[workflowId]`) the server sanitizes the submission and, if the workflow has a `webhookUrl`, the server computes an HMAC signature over the sanitized payload and sends it in request headers to the webhook endpoint. The header names and signing format are implemented in `lib/hmac.ts` (e.g. `X-LegalFlow-Signature`, `X-LegalFlow-Timestamp`).
+- **Webhook verification:** The receiving webhook endpoint can verify the signature using the same HMAC algorithm and the workflow's `hmacSecret`. This ensures that only submissions from the client websites are accepted by the webhook.
+- **Security note:** The HMAC secret is never exposed to the client or embedded scripts. For now secrets are stored in Firestore . so to recieve the secret you need to run the project locally with your Firestore credentials .
 
 ### Origin validation (render + submit)
 
@@ -117,6 +119,12 @@ Required environment variables:
 
 ## Running Locally
 
+Run tests:
+
+```bash
+npm test
+```
+
 Start the dev server:
 
 ```bash
@@ -134,8 +142,9 @@ Open `http://localhost:3000` and sign up to create workflows.
 - `POST /api/workflows` — Create a new workflow (authenticated).
 - `GET|PUT|DELETE /api/workflows/[id]` — Read, update, or delete a specific workflow (authenticated). PUT requests are validated with Zod and sanitized before write.
 - `GET /api/widget/[workflowId]?token=` — Serve the embeddable widget configuration (token or other auth may be required depending on workflow settings).
+* Refer to `docs/API_AND_SENSITIVE.md` for detailed parameter shapes and expected responses.
 
-Refer to `docs/API_AND_SENSITIVE.md` for detailed parameter shapes and expected responses.
+* We could have implemented a middleware to handle authentication and authorization for the API routes, but for now, we handle it directly in each route handler.
 
 ## Folder Structure
 

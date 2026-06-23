@@ -1,5 +1,10 @@
 import type { Timestamp } from "firebase-admin/firestore";
 
+/*
+canonical types and the WorkflowSchema definition.
+Why sensitive: WorkflowSchema includes hmacSecret and createdAt/updatedAt types (Timestamp|string). This file documents which fields must never be returned to browser clients.
+*/
+
 export type FieldType =
   | "text"
   | "email"

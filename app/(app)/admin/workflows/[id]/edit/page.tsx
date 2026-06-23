@@ -203,6 +203,7 @@ export default function EditWorkflowPage() {
                 <Webhook className="w-4 h-4 text-gray-400" />
                 Connection settings
               </div>
+              <p className="text-xs text-gray-400">Hmac are stored in the database. For now, use your own database to find hmac keys, or ask the administrator.</p>
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-gray-500">Webhook URL</label>

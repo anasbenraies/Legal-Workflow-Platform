@@ -6,6 +6,8 @@ import { Timestamp } from "firebase-admin/firestore";
 
 const USERS = "users";
 
+
+/* utility functions for user authentication and storage.*/
 export async function createUser(input: { username: string; email: string; password: string }) {
   const id = `u_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   const now = Timestamp.now();

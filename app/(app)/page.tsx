@@ -1,6 +1,8 @@
 "use client"
 
 import type { FC, ComponentType, ReactNode } from "react";
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   GripVertical,
@@ -92,6 +94,27 @@ const Divider: FC = () => {
 };
 
 export default function LegalFlowLanding() {
+  const router = useRouter();
+
+  // On mount, if the user already has a persisted auth token, redirect
+  // them straight to the admin workflows; otherwise send to the auth page.
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem("lf_auth");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.token) {
+          router.push("/admin/workflows");
+          return;
+        }
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+    // not logged in: send to auth
+    router.push("/");
+  }, [router]);
+
   return (
     <div className="min-h-screen w-full relative overflow-x-hidden" style={{ background: C.paper, color: C.ink, fontFamily: FONT_BODY }}>
       <style>{`
@@ -225,7 +248,7 @@ export default function LegalFlowLanding() {
                 <pre className="text-[11px] rounded-lg p-3 overflow-x-auto" style={{ background: "#070B14", border: `1px solid rgba(233,236,248,0.12)`, color: C.frost, fontFamily: FONT_MONO }}>
 {`<div id="legalflow-widget"></div>
 <script
-  src="https://app.legalflow.io/embed.js"
+  src="https://legal-workflow-platform/embed.js"
   data-workflow-id="wf_8f2a1c"
 ></script>`}
                 </pre>

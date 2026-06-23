@@ -4,6 +4,14 @@ import type { WorkflowSchema, WorkflowSchemaClient } from "@/types/workflow";
 import { Timestamp } from "firebase-admin/firestore";
 import { randomUUID } from "crypto";
 
+
+/*
+Firestore access and data persistence.
+Why sensitive: writes/reads pipelines; houses creation of workflows and generation of hmacSecret (via hmac.generateSecret). Contains logic that maps ownerId to user_workflows.
+Important functions: createWorkflow, getWorkflowInternal (returns hmacSecret — DO NOT expose), getWorkflowIfOwner, updateWorkflow, createSubmission, updateSubmissionWebhookStatus.
+*/
+
+
 const WORKFLOWS = "workflows";
 const SUBMISSIONS = "submissions";
 

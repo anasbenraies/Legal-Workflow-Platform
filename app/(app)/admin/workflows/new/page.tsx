@@ -101,9 +101,6 @@ export default function NewWorkflowPage() {
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="flex items-center justify-center w-7 h-7 rounded-md bg-emerald-50 text-emerald-600 flex-shrink-0">
-                <PlusCircle className="w-4 h-4" />
-              </span>
               <Input
                 value={workflow.name}
                 onChange={(e) => setWorkflow({ ...workflow, name: e.target.value })}
@@ -142,6 +139,7 @@ export default function NewWorkflowPage() {
                 <Webhook className="w-4 h-4 text-gray-400" />
                 Connection settings
               </div>
+              <p className="text-xs text-gray-400">Hmac are stored in the database. For now, use your own database to find hmac keys, or ask the administrator.</p>
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-gray-500">Webhook URL</label>
@@ -174,7 +172,7 @@ export default function NewWorkflowPage() {
             <div className="border border-gray-200 rounded-xl bg-white shadow-sm p-5">
               <ThemeCustomizer theme={workflow.theme} onChange={(theme) => setWorkflow({ ...workflow, theme })} />
             </div>
-            
+
             {/* AI generator */}
             <div className="border border-gray-200 rounded-xl bg-white shadow-sm p-5">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">AI generator</div>
